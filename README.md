@@ -2,11 +2,11 @@
 
 Predicting whether a loan will default, using an EDA notebook and five classification models, all built as scikit-learn Pipelines.
 
-## Overview
+## 1. Problem
 
-This project uses the public **Credit Risk Dataset** (Kaggle) to predict loan default (`loan_status`: 0 = repaid, 1 = default). It covers data cleaning, exploratory analysis, preprocessing in a `ColumnTransformer` Pipeline, and a comparison of five models using stratified cross-validation and a held-out test set.
+Lenders lose money when borrowers default. The goal is to predict, from a borrower's profile and loan details, whether a loan will **default** (`loan_status`: 0 = repaid, 1 = default), so that risky applications can be flagged early. This is a binary classification problem with imbalanced classes (about 22% defaults), so recall, F1 and ROC AUC matter more than accuracy.
 
-## Dataset
+## 2. Data
 
 - **Source:** Credit Risk Dataset (`credit_risk_dataset.csv`), Kaggle
 - **Size:** 32,581 rows and 12 columns (32,416 after cleaning)
@@ -27,24 +27,24 @@ This project uses the public **Credit Risk Dataset** (Kaggle) to predict loan de
 | `cb_person_cred_hist_length` | Credit history length in years |
 | `loan_status` | **Target**: 1 = default |
 
-## Workflow
+## 3. Approach
 
-### 1. Exploratory data analysis
+### 3.1 Exploratory data analysis
 - Inspected shape, dtypes, summary statistics and unique values.
 - Removed **165 duplicate rows**.
 - Plotted a correlation heatmap, the target distribution, category counts, default rate per category, numeric features split by target, and scatter plots.
 
-### 2. Missing values
+### 3.2 Missing values
 - `person_emp_length`: 2.74% missing. `loan_int_rate`: 9.55% missing.
 - Missingness in `loan_int_rate` is about 8 to 11% in every loan grade, so it does not appear to depend on grade.
 - Filled with the **median**. The final models do this inside the Pipeline, so medians are learned from training data only.
 
-### 3. Outliers
+### 3.3 Outliers
 - Rows with age above 100 were removed.
 - Employment length above 60 years was treated as an error and set to missing.
 - Income was **capped at the 99th percentile** (225,000), which affected 322 rows.
 
-### 4. Preprocessing Pipeline
+### 3.4 Preprocessing Pipeline
 | Columns | Transformation |
 |---|---|
 | Numeric features | Median imputation, then `StandardScaler` |
@@ -54,10 +54,10 @@ This project uses the public **Credit Risk Dataset** (Kaggle) to predict loan de
 
 The data is split 80/20 with a stratified `train_test_split`.
 
-### 5. Models
+### 3.5 Models
 Logistic Regression, Gaussian Naive Bayes, Random Forest, Gradient Boosting and SVM (RBF). Class imbalance is handled with `class_weight="balanced"` (or balanced sample weights for Gradient Boosting).
 
-## Results
+## 4. Results
 
 **5-fold stratified cross-validation (training data)**
 
@@ -85,11 +85,19 @@ Logistic Regression, Gaussian Naive Bayes, Random Forest, Gradient Boosting and 
 - **Logistic Regression** is a simple, interpretable baseline that still reaches a recall of about 0.79.
 - Accuracy alone is misleading with about 78% non-defaults, so recall, F1 and ROC AUC are the main metrics.
 
-## Limitations
+## 5. Limitations
 - `loan_grade` and `loan_int_rate` are set by the lender, so they partly encode the lender's own risk assessment.
 - Outlier cleaning and the income cap were computed on the full dataset before the split, which is a small leak for a baseline.
 - Capped income no longer exactly matches `loan_percent_income`.
 - No hyperparameter tuning or probability-threshold tuning has been done yet.
+
+---
+
+## Possible next steps
+- Hyperparameter tuning with `GridSearchCV` or `RandomizedSearchCV`.
+- Tune the decision threshold to trade precision against recall.
+- Try the model without `loan_grade` and `loan_int_rate` to reduce lender-assigned signal.
+- Add feature importance or SHAP for interpretability.
 
 ## Tech stack
 Python, pandas, NumPy, scikit-learn, matplotlib, seaborn
@@ -110,9 +118,3 @@ Download `credit_risk_dataset.csv` from Kaggle and place it next to the notebook
 ├── credit_risk_dataset.csv
 └── README.md
 ```
-
-## Possible next steps
-- Hyperparameter tuning with `GridSearchCV` or `RandomizedSearchCV`.
-- Tune the decision threshold to trade precision against recall.
-- Try the model without `loan_grade` and `loan_int_rate` to reduce lender-assigned signal.
-- Add feature importance or SHAP for interpretability.
